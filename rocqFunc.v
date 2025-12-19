@@ -782,3 +782,59 @@ Theorem apply_late_policy_unfold :
     Proof.
         intros. reflexivity.
     Qed.
+
+Theorem no_penalty_for_mostly_on_time :
+forall (late_days : nat) (g : grade),
+(late_days <? 9 = true) ->
+apply_late_policy late_days g = g.
+Proof.
+intros l g.
+intros H.
+rewrite -> apply_late_policy_unfold.
+rewrite -> H.
+reflexivity.
+Qed.
+
+Theorem grade_lowered_once :
+forall (late_days : nat) (g : grade),
+(late_days <? 9 = false) ->
+(late_days <? 17 = true) ->
+(apply_late_policy late_days g) = (lower_grade g).
+Proof.
+intros l g.
+intros H1.
+intros H2.
+rewrite -> apply_late_policy_unfold.
+rewrite -> H1.
+rewrite -> H2.
+reflexivity.
+Qed.
+
+End LateDays.
+
+Inductive bin : Type :=
+| Z
+| B0 (n : bin)
+| B1 (n : bin).
+
+Fixpoint incr (m:bin) : bin :=
+match m with
+| Z => B1 Z
+| B0 n' => B1 n'
+| B1 n' => B0 (incr n') 
+end.
+
+Example test_bin_incr1 : (incr (B1 Z)) = B0 (B1 Z).
+Proof. simpl. reflexivity. Qed.
+Example test_bin_incr2 : (incr (B0 (B1 Z))) = B1 (B1 Z).
+Proof. simpl. reflexivity. Qed.
+Example test_bin_incr3 : (incr (B1 (B1 Z))) = B0 (B0 (B1 Z)).
+Proof. simpl. reflexivity. Qed.
+
+
+Fixpoint bin_to_nat (m:bin) : nat :=
+    match m with
+    | Z => 0
+    | B0 m' => 2 * bin_to_nat m' 
+    | B1 m' => 1 + 2 * bin_to_nat m' 
+    end.
