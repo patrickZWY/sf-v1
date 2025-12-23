@@ -479,3 +479,129 @@ Proof.
     rewrite IH.
     reflexivity.
 Qed.
+
+Theorem involution_injective : forall (f : nat -> nat),
+(forall n : nat, n = f (f n)) -> (forall n1 n2 : nat, f n1 = f n2 -> n1 = n2).
+Proof.
+    intros f n'.
+    intros n1 n2 H.
+    rewrite -> n'.
+    rewrite <- H.
+    rewrite <- n'.
+    reflexivity.
+Qed.
+
+Theorem rev_injective : forall (l1 l2 : natlist),
+rev l1 = rev l2 -> l1 = l2.
+Proof.
+    intros l1 l2.
+    intros H.
+    rewrite <- rev_involutive.
+    rewrite <- H.
+    rewrite -> rev_involutive.
+    reflexivity.
+Qed.
+
+Inductive natoption : Type :=
+    | Some (n : nat)
+    | None.
+
+Fixpoint nth_error (l:natlist) (n:nat) : natoption :=
+match l with
+| nil => None
+| a :: l' => match n with
+            | O => Some a
+            | S n' => nth_error l' n'
+            end 
+end.
+
+Example test_nth_error1 : nth_error [4;5;6;7] 0 = Some 4.
+Proof. reflexivity. Qed.
+Example test_nth_error2 : nth_error [4;5;6;7] 3 = Some 7.
+Proof. reflexivity. Qed.
+Example test_nth_error3 : nth_error [4;5;6;7] 9 = None.
+Proof. reflexivity. Qed.
+
+Definition option_elim (d : nat) (o : natoption) : nat :=
+match o with 
+| Some n' => n'
+| None => d
+end.
+
+Definition hd_error (l : natlist) : natoption :=
+match l with
+| nil => None
+| x :: xs => Some x
+end.
+
+Example test_hd_error1 : hd_error [] = None.
+Proof. reflexivity. Qed.
+Example test_hd_error2 : hd_error [1] = Some 1.
+Proof. reflexivity. Qed.
+Example test_hd_error3 : hd_error [5;6] = Some 5.
+Proof. reflexivity. Qed.
+
+Theorem option_elim_hd : forall (l:natlist) (default:nat),
+hd default l = option_elim default (hd_error l).
+Proof.
+    intros l default.
+    induction l as [| n l' IHl'].
+    simpl. reflexivity.
+    simpl. reflexivity.
+Qed.
+
+End NatList.
+
+Inductive id : Type :=
+| Id (n : nat).
+
+Definition eqb_id (x1 x2 : id) :=
+    match x1, x2 with
+    | Id n1, Id n2 => n1 =? n2
+    end.
+
+Theorem eqb_id_refl : forall x, eqb_id x x = true.
+Proof.
+    intros x.
+    destruct x.
+    simpl. rewrite eqb_refl. reflexivity.
+Qed.
+
+Module PartialMap.
+Export NatList.
+
+Inductive partial_map : Type :=
+| empty 
+| record (i : id) (v : nat) (m : partial_map).
+
+Definition update (d : partial_map) (x : id)
+(value : nat) : partial_map :=
+record x value d.
+
+Fixpoint find (x : id) (d : partial_map) : natoption :=
+match d with
+| empty => None
+| record y v d' => if eqb_id x y then Some v else find x d'
+end.
+
+Theorem update_eq :
+forall (d : partial_map) (x : id) (v : nat),
+find x (update d x v) = Some v.
+Proof.
+    intros d x v.
+    simpl. rewrite -> eqb_id_refl.
+    reflexivity.
+Qed.
+
+Theorem update_neq :
+forall (d : partial_map) (x y : id) (o : nat),
+eqb_id x y = false -> find x (update d y o) = find x d.
+Proof.
+    intros d x y o.
+    intros H.
+    simpl.
+    rewrite -> H.
+    reflexivity.
+Qed.
+
+End PartialMap.
