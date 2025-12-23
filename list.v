@@ -376,8 +376,106 @@ Proof.
     reflexivity.
 Qed. 
 
+Theorem app_assoc4 : forall l1 l2 l3 l4 : natlist,
+l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
+Proof.
+    intros l1 l2 l3 l4.
+    rewrite -> app_assoc.
+    rewrite -> app_assoc.
+    reflexivity.
+Qed.
 
+Lemma nonzeros_app : forall l1 l2 : natlist,
+nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
+Proof.
+    intros l1 l2.
+    induction l1 as [| n l' IHl'].
+    reflexivity.
+    simpl.
+    rewrite -> IHl'.
+    destruct n.
+    - reflexivity.
+    - simpl.
+    reflexivity.
+Qed.
 
+Fixpoint eqblist (l1 l2 : natlist) : bool :=
+match l1, l2 with
+| nil, nil => true
+| _, nil => false
+| nil, _ => false
+| x :: xs, y :: ys => if x =? y then eqblist xs ys else false
+end.
 
+Example test_eqblist1 :
+(eqblist nil nil = true).
+Proof. reflexivity. Qed.
+Example test_eqblist2 :
+eqblist [1;2;3] [1;2;3] = true.
+Proof. reflexivity. Qed.
+Example test_eqblist3 :
+eqblist [1;2;3] [1;2;4] = false.
+Proof. reflexivity. Qed.
 
+Theorem eqblist_refl : forall l:natlist,
+true = eqblist l l.
+Proof.
+    intros l.
+    induction l as [| n l' IHl'].
+    reflexivity.
+    simpl. rewrite -> eqb_refl.
+    rewrite IHl'.
+    reflexivity.
+Qed.
 
+Theorem count_member_nonzero : forall (s : bag),
+1 <=? (count 1 (1 :: s)) = true.
+Proof.
+    intros s.
+simpl. reflexivity. Qed.
+
+Theorem leb_n_Sn : forall n,
+n <=? (S n) = true.
+Proof.
+    intros n. induction n as [| n' IHn'].
+    - simpl. reflexivity.
+- simpl. rewrite IHn'. reflexivity. Qed.
+
+Theorem remove_one_does_not_increase_count :
+forall (s : bag), (count 0 (remove_one 0 s)) <=? (count 0 s) = true.
+Proof.
+    intros s. induction s as [| n' IHn'].
+    simpl. reflexivity.
+    simpl. destruct n'.
+    simpl. rewrite leb_n_Sn. reflexivity.
+    simpl. rewrite -> IHIHn'.
+    reflexivity.
+Qed.
+
+Theorem count_sum_equal :
+forall (s1 : bag) (s2 : bag) (a : nat),
+(count a s1) + (count a s2) = (count a (sum s1 s2)).
+Proof.
+    intros s1 s2 a.
+    unfold sum.
+    revert s2.
+    induction s1 as [| x xs IH].
+    intros s2.
+    - simpl. reflexivity.
+    - destruct s2 as [| y ys].
+    simpl. rewrite add_0_r_firsttry.
+    reflexivity.
+    simpl.
+    destruct (x =? a) eqn:Ex.
+    destruct (y =? a) eqn:Ey.
+    simpl. rewrite <- plus_n_Sm.
+    rewrite IH. reflexivity.
+    simpl. 
+    rewrite IH. reflexivity.
+    destruct (y =? a) eqn:Ey.
+    rewrite <- plus_n_Sm.
+    rewrite IH.
+    reflexivity.
+    rewrite IH.
+    reflexivity.
+Qed.
