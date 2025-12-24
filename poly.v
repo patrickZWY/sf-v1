@@ -494,7 +494,11 @@ Proof.
 reflexivity.
 Qed.
 
-
+(*This is similar to a note in previous chapter about
+how sometimes coq cannot tell the name of a product
+type from the content of the product type, so once
+we destruct it and show its content the simplification
+is made easier.*)
 Theorem curry_uncurry : forall (X Y Z : Type)
                         (f : (X * Y) -> Z) (p : X * Y),
 prod_uncurry (prod_curry f) p = f p.
@@ -502,3 +506,4 @@ Proof.
     intros X Y Z f p.
     destruct p.
     reflexivity.
+Qed.
