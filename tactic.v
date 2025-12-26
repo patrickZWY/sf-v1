@@ -255,3 +255,165 @@ Proof.
         injection goal as goal2.
         apply goal2.
 Qed.
+
+Theorem double_injective_take2 : forall n m,
+double n = double m -> n = m.
+
+Proof.
+    intros n m.
+    generalize dependent n.
+    induction m as [| m' IHm'].
+    - simpl. intros n eq. destruct n as [| n'] eqn:E.
+    + reflexivity.
+    + discriminate eq.
+    - intros n eq. destruct n as [| n'] eqn:E.
+    + discriminate eq.
+    + f_equal.
+    apply IHm'. injection eq as goal. apply goal.
+Qed.
+
+Lemma sub_add_leb : forall n m, n <=? m = true 
+-> (m - n) + n = m.
+Proof.
+    intros n.
+    induction n as [| n' IHn'].
+    - intros m H. rewrite add_0_r_firsttry. destruct m as [| m'].
+        + reflexivity.
+        + reflexivity.
+    - intros m H. destruct m as [| m'].
+        + discriminate.
+        + simpl in H. simpl. rewrite <- plus_n_Sm.
+        rewrite IHn'.
+        * reflexivity.
+        * apply H.
+Qed.
+
+Theorem nth_error_after_last: forall (n : nat) (X : Type)
+(l : list X), length l = n -> nth_error l n = None.
+Proof.
+    intros n X l.
+    generalize dependent n.
+    induction l as [| n' l' IHl'].
+    intros n H.
+    simpl in H. simpl. reflexivity.
+    intros n H.
+    simpl in H.
+    destruct n as [| x].
+    simpl. discriminate.
+    simpl. apply IHl'.
+    injection H as goal.
+    apply goal.
+Qed.
+
+Definition square n := n * n.
+
+Lemma square_mult : forall n m, square (n * m)
+= square n * square m.
+Proof.
+    intros n m.
+    unfold square.
+    rewrite mult_assoc.
+    assert (H : n * m * n = n * n * m).
+        { rewrite mul_comm. apply mult_assoc. }
+    rewrite H. rewrite mult_assoc. reflexivity.
+Qed.
+
+Definition sillyfun (n : nat) : bool :=
+if n =? 3 then false
+else if n =? 5 then false
+else false.
+
+Theorem sillyfun_false : forall (n : nat),
+sillyfun n = false.
+Proof.
+    intros n. unfold sillyfun.
+    destruct (n =? 3) eqn:E1.
+    - reflexivity.
+    - destruct (n =? 5) eqn:E2.
+        + reflexivity.
+        + reflexivity.
+Qed.
+
+Fixpoint split {X Y : Type} (l : list (X*Y))
+: (list X) * (list Y) :=
+match l with
+| [] => ([],[])
+| (x, y) :: t =>
+    match split t with
+    | (lx, ly) => (x :: lx, y :: ly)
+    end
+end.
+
+(*Do I have to delay the introduction of l1 and l2?*)
+(*destruct (split t) is a bit hard to find.*)
+Theorem combine_split : forall X Y (l : list (X*Y)) l1 l2,
+split l = (l1, l2) -> combine l1 l2 = l.
+Proof.
+    intros X Y l.
+    induction l as [| [x y] t IH].
+    - intros l1 l2 H.
+    simpl in H.
+    injection H as H1 H2.
+    symmetry in H1. symmetry in H2.
+    rewrite H1. rewrite H2.
+    simpl. reflexivity.
+    - intros l1 l2 H.
+    simpl in H. destruct (split t) as [lx ly] eqn:HS.
+    injection H as H1 H2.
+    rewrite <- H1. rewrite <- H2.
+    simpl.
+    assert (combine lx ly = t) as Htail.
+    apply IH. reflexivity.
+    rewrite -> Htail.
+    reflexivity.
+Qed.
+
+Definition sillyfun1 (n : nat) : bool :=
+if n=? 3 then true
+else if n =? 5 then true
+else false.
+
+Theorem sillyfun1_odd : forall (n : nat),
+sillyfun1 n = true -> odd n = true.
+Proof.
+    intros n eq. unfold sillyfun1 in eq.
+    destruct (n =? 3) eqn:Heqe3.
+    - apply eqb_true in Heqe3.
+    rewrite -> Heqe3. reflexivity.
+    - destruct (n =? 5) eqn:Heqe5.
+    + apply eqb_true in Heqe5.
+    rewrite -> Heqe5. reflexivity.
++ discriminate eq. Qed.
+
+Theorem bool_fn_applied_thrice :
+forall (f : bool -> bool) (b : bool),
+f (f (f b)) = f b.
+Proof.
+    intros f b.
+    destruct b.
+    destruct (f true) eqn:E1.
+    rewrite E1.
+    rewrite E1. reflexivity.
+    destruct (f false) eqn:E2.
+    rewrite E1. reflexivity.
+    rewrite E2. reflexivity.
+    destruct (f false) eqn:E3.
+    destruct (f true) eqn:E4.
+    rewrite E4. reflexivity.
+    rewrite E3. reflexivity.
+    rewrite E3. rewrite E3. reflexivity.
+Qed.
+
+Theorem eqb_sym : forall (n m : nat),
+(n =? m) = (m =? n).
+intros n.
+induction n as [| n' IH].
+intros m.
+simpl.
+destruct m as [| m'] eqn:E1.
+reflexivity. simpl. reflexivity.
+intros m.
+destruct m as [| m'] eqn:E2.
+simpl. reflexivity.
+simpl. apply IH.
+Qed.
