@@ -407,13 +407,103 @@ Qed.
 Theorem eqb_sym : forall (n m : nat),
 (n =? m) = (m =? n).
 intros n.
-induction n as [| n' IH].
+induction n.
 intros m.
 simpl.
-destruct m as [| m'] eqn:E1.
+destruct m eqn:E1.
 reflexivity. simpl. reflexivity.
 intros m.
-destruct m as [| m'] eqn:E2.
+destruct m eqn:E2.
 simpl. reflexivity.
-simpl. apply IH.
+simpl. apply IHn.
 Qed.
+
+Theorem eqb_trans : forall n m p,
+n =? m = true -> m =? p = true -> n =? p = true.
+intros n m p eq1 eq2.
+apply eqb_true in eq1.
+apply eqb_true in eq2.
+rewrite -> eq1.
+rewrite -> eq2.
+apply eqb_refl.
+Qed.
+
+Definition split_combine_statement : Prop :=
+forall X Y (l : list (X*Y)) l1 l2,
+length l1 = length l2 -> combine l1 l2 = l -> split l = (l1, l2).
+
+(* Theorem split_combine : split_combine_statement.
+Proof.
+    intros X Y l l1.
+    induction l1 as [| x xs IH].
+    intros l2 Hlen Hcomb.
+    - destruct l2 as [| y ys].
+    + simpl in Hcomb. rewrite <- Hcomb.
+    simpl. reflexivity.
+    + simpl in Hlen. discriminate Hlen.
+    - intros l2 Hlen Hcomb.
+    destruct l2 as [| y ys].
+    simpl in Hlen.
+    discriminate Hlen.
+    simpl in Hlen.
+    injection Hlen as Hlen'.
+    subst l.
+    simpl.
+    destruct l as [| [x' y'] l'].
+    simpl in Hcomb. discriminate Hcomb.
+    simpl in Hcomb.
+    injection Hcomb as Hhead Htail.
+    rewrite <- Hhead.
+    rewrite <- Htail.
+    rewrite <- H.
+    simpl. *)
+
+(*the first part of this is pretty obvious*)
+(*the last case we will have to bring combine together
+with split and after simpl. we need to make the former
+part look like (x :: xs, y :: ys). and the only way
+to make it so is to assert a new shape with assert to
+construct a goal or to use replace to construct a goal.
+When using apply, remember the direction and shape has
+to match completely. use symmetry if necessary. *)
+Theorem split_combine : split_combine_statement.
+Proof.
+    intros X Y l l1.
+    generalize dependent l.
+    induction l1 as [| x xs IH]; intros l l2 Hlen Hcomb.
+    -
+    destruct l2 as [| y ys].
+    + simpl in Hcomb. rewrite <- Hcomb. simpl. reflexivity.
+    + simpl in Hlen. discriminate Hlen.
+    -
+    destruct l2 as [| y ys].
+    + simpl in Hlen. discriminate Hlen.
+    + simpl in Hlen. injection Hlen as Hlen'.
+    rewrite <- Hcomb. simpl.
+    replace (split (combine xs ys)) with (xs, ys).
+    reflexivity.
+    symmetry.
+    apply IH. apply Hlen'.
+    reflexivity.
+Qed.
+
+(*Need to watch out for the structure of the program
+and what exactly our current goal is.*)
+Theorem filter_exercise : forall (X : Type) (test : X -> bool)
+(x : X) (l lf : list X),
+filter test l = x :: lf -> test x = true.
+Proof.
+intros X test x l lf H.
+induction l as [| n l' IHl'].
+simpl in H. discriminate H.
+simpl in H.
+destruct (test n) eqn:Ht.
+injection H as Hx _.
+rewrite <- Hx.
+rewrite Ht.
+reflexivity.
+apply IHl'.
+apply H.
+Qed.
+
+
