@@ -126,3 +126,46 @@ Proof.
     split.
     apply HP. apply HQ. apply HR.
 Qed.
+
+Lemma factor_is_O:
+    forall n m : nat, n = 0 \/ m = 0 -> n * m = 0.
+Proof.
+    intros n m [Hn | Hm].
+    - rewrite Hn. reflexivity.
+    - rewrite Hm. rewrite <- mult_n_O.
+    reflexivity.
+Qed.
+
+Lemma or_intro_l : forall A B : Prop, A -> A \/ B.
+Proof.
+    intros A B HA.
+    left.
+    apply HA.
+Qed.
+
+Lemma zero_or_succ : 
+forall n : nat, n = 0 \/ n = S (pred n).
+Proof.
+    intros [| n'].
+    - left. reflexivity.
+    - right. reflexivity.
+Qed.
+
+Lemma mult_is_O :
+forall n m, n * m = 0 -> n = 0 \/ 0 * m = 0.
+Proof.
+    intros n m eq.
+    right.
+    simpl. reflexivity.
+Qed.
+
+Theorem or_commut : forall P Q : Prop,
+P \/ Q -> Q \/ P.
+Proof.
+    intros P Q [HP | HQ].
+    right. apply HP.
+    left. apply HQ.
+Qed.
+    
+
+    
