@@ -166,6 +166,97 @@ Proof.
     right. apply HP.
     left. apply HQ.
 Qed.
-    
 
-    
+Definition not (P:Prop) := P -> False.
+
+Check not : Prop -> Prop.
+
+Notation "~ x" := (not x) : type_scope.
+
+Theorem ex_falso_quodlibet : forall (P:Prop),
+False -> P.
+Proof.
+    intros P contra.
+    destruct contra.
+Qed.
+
+Theorem not_implies_our_not : forall (P:Prop),
+~ P -> (forall (Q:Prop), P -> Q).
+Proof.
+    unfold not.
+    intros P Q eq eq2.
+    apply ex_falso_quodlibet.
+    apply Q.
+    apply eq2.
+Qed.
+
+Notation "x <> y" := (~(x = y)) : type_scope.
+
+Theorem zero_not_one : 0 <> 1.
+Proof.
+    unfold not.
+    intros contra.
+    discriminate contra.
+Qed.
+
+Theorem not_False :
+~ False.
+Proof.
+    unfold not. intros H. destruct H.
+Qed.
+
+Theorem contradiction_implies_anything : forall P Q : Prop,
+(P /\ ~P) -> Q.
+Proof.
+    intros P Q [HP HNP]. unfold not in HNP.
+    apply HNP in HP. destruct HP.
+Qed.
+
+Theorem double_neg : forall P : Prop,
+P -> ~~P.
+Proof.
+    intros P H. unfold not. intros G. apply G. apply H.
+Qed.
+
+Theorem contrapositive : forall (P Q : Prop),
+(P -> Q) -> (~Q -> ~P).
+Proof.
+    intros P Q eq eq2.
+    unfold not. unfold not in eq2.
+    intros H.
+    apply eq2. apply eq. apply H.
+Qed.
+
+Theorem not_both_true_and_false : forall P : Prop,
+~ (P /\ ~P).
+Proof.
+    intros P [HP HNP].
+    unfold not in HNP.
+    apply HNP. apply HP.
+Qed.
+
+Theorem de_morgan_not_or : forall (P Q : Prop),
+~ (P \/ Q) -> ~P /\ ~Q.
+Proof.
+    intros P Q.
+    unfold not.
+    split.
+    intros H1.
+    apply H.
+    left.
+    apply H1.
+    intros H1.
+    apply H.
+    right.
+    apply H1.
+Qed.
+
+Lemma not_S_pred_n : ~(forall n : nat, S (pred n) = n).
+Proof.
+    unfold not.
+    intros H.
+    unfold pred in H.
+    specialize (H 0).
+    simpl in H.
+    discriminate H.
+Qed.
