@@ -260,3 +260,127 @@ Proof.
     simpl in H.
     discriminate H.
 Qed.
+
+Theorem not_true_is_false : forall b : bool,
+b <> true -> b = false.
+Proof.
+    intros [] H.
+    - unfold not in H.
+    exfalso.
+    apply H. reflexivity.
+    - reflexivity.
+Qed.
+
+Lemma True_is_true : True.
+Proof. apply I. Qed.
+
+Definition disc_fn (n : nat) : Prop :=
+    match n with
+    | O => True
+    | S _ => False
+    end.
+
+Theorem disc_example : forall n, ~ (O = S n).
+Proof.
+    intros n contra.
+    assert (H : disc_fn O). { simpl. apply I. }
+    rewrite contra in H. simpl in H. apply H.
+Qed.
+
+Definition disc_fn' {X : Type} (n : list X) : Prop :=
+    match n with
+    | nil => True
+    | _ :: _ => False
+    end.
+
+Theorem nil_is_not_cons : forall X (x : X) (xs : list X), ~ (nil = x :: xs).
+Proof.
+    intros X x xs contra.
+    assert (H : disc_fn' (@nil X)). { simpl. apply I. }
+    rewrite contra in H. simpl in H. apply H.
+Qed.
+
+Theorem iff_sym : forall P Q : Prop,
+(P <-> Q) -> (Q <-> P).
+Proof.
+    intros P Q [HAB HBA].
+    split.
+    - apply HBA.
+    - apply HAB.
+Qed.
+
+Lemma not_true_iff_false : forall b,
+b <> true <-> b = false.
+Proof.
+    intros b. split.
+    - apply not_true_is_false.
+    - intros H. rewrite H. intros H'. discriminate H'.
+Qed.
+
+Lemma apply_iff_example1:
+    forall P Q R : Prop, (P <-> Q) -> (Q -> R) -> (P -> R).
+Proof.
+    intros P Q R Hiff H HP. apply H. apply Hiff. apply HP.
+Qed.
+
+Lemma apply_iff_example2:
+    forall P Q R : Prop, (P <-> Q) -> (P -> R) -> (Q -> R).
+Proof.
+    intros P Q R Hiff H HQ. apply H. apply Hiff. apply HQ.
+Qed.
+
+Theorem iff_refl : forall P : Prop,
+    P <-> P.
+Proof.
+    intros P.
+    split.
+    intros H.
+    apply H.
+    intros H.
+    apply H.
+Qed.
+
+Theorem iff_trans : forall P Q R : Prop,
+(P <-> Q) -> (Q <-> R) -> (P <-> R).
+Proof.
+    intros P Q R H1 H2.
+    split.
+    intros H3.
+    apply H2. apply H1. apply H3.
+    intros H3.
+    apply H1.
+    apply H2.
+    apply H3.
+Qed.
+
+Theorem or_distributes_over_and : forall P Q R : Prop,
+P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
+Proof.
+    intros P Q R.
+    split.
+    intros H.
+    split.
+    destruct H as [H1 | H2] eqn:Ed.
+    left. apply H1. destruct H2. right. apply q.
+    destruct H as [H1 | H2] eqn:Ed.
+    left. apply H1. destruct H2. right. apply r.
+    intros H.
+    destruct H as [H1 H2] eqn:E1.
+    destruct H1 as [H3 | H4] eqn:E2.
+    left. apply H3.
+    destruct H2 as [H5 | H6].
+    left. apply H5.
+    right. split.
+    apply H4. apply H6.
+Qed. 
+
+
+
+
+
+
+
+
+
+
+
