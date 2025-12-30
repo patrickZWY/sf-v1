@@ -152,11 +152,14 @@ Proof.
 Qed.
 
 Lemma mult_is_O :
-forall n m, n * m = 0 -> n = 0 \/ 0 * m = 0.
+forall n m, n * m = 0 -> n = 0 \/ m = 0.
 Proof.
-    intros n m eq.
-    right.
-    simpl. reflexivity.
+    intros n m H.
+    destruct n as [| n'].
+    - left. reflexivity.
+    - right. destruct m as [| m'].
+    + reflexivity.
+    + simpl in H. discriminate H.
 Qed.
 
 Theorem or_commut : forall P Q : Prop,
@@ -374,9 +377,86 @@ Proof.
     apply H4. apply H6.
 Qed. 
 
+From Stdlib Require Import Setoids.Setoid.
 
+Lemma mul_eq_0 : forall n m, n * m = 0 <-> n = 0 \/ m = 0.
+Proof.
+    intros n m.
+    split.
+    - apply mult_is_O.
+    - apply factor_is_O.
+Qed.
 
+Theorem or_assoc :
+    forall P Q R : Prop, P \/ (Q \/ R) <-> (P \/ Q) \/ R.
+Proof.
+    intros P Q R. split.
+    - intros [H | [H | H]].
+        + left. left. apply H.
+        + left. right. apply H.
+        + right. apply H.
+    - intros [[H | H] | H].
+        + left. apply H.
+        + right. left. apply H.
+        + right. right. apply H.
+Qed.
 
+Lemma mul_eq_0_ternary :
+    forall n m p, n * m * p = 0 <-> n = 0 \/ m = 0 \/ p = 0.
+Proof.
+    intros n m p.
+    rewrite mul_eq_0. rewrite mul_eq_0. rewrite or_assoc.
+    reflexivity.
+Qed.
+
+Definition Even x := exists n : nat, x = double n.
+Check Even : nat -> Prop.
+
+Lemma four_is_Even : Even 4.
+Proof.
+    unfold Even. exists 2. reflexivity.
+Qed.
+
+Theorem exists_example_2 : forall n,
+(exists m, n = 4 + m) ->
+(exists o, n = 2 + o).
+Proof.
+    intros n [m Hm].
+    exists (2 + m).
+    apply Hm.
+Qed.
+
+Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
+(forall x, P x) -> ~ (exists x, ~ P x).
+Proof.
+    intros X P H1 H2.
+    destruct H2 as [x E].
+    unfold not in E.
+    apply E.
+    apply H1.
+Qed.
+
+Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
+(exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
+Proof.
+    intros X P Q.
+    split.
+    intros H1.
+    destruct H1 as [x [goal | goal2]].
+    left.
+    exists x.
+    apply goal.
+    right.
+    exists x.
+    apply goal2.
+    intros H2.
+    destruct H2 as [ [x H1] | [y H2]].
+    exists x.
+    left. apply H1.
+    exists y.
+    right.
+    apply H2.
+Qed.
 
 
 
