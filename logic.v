@@ -458,9 +458,103 @@ Proof.
     apply H2.
 Qed.
 
+Theorem leb_plus_exists : forall n m, n <=? m = true -> exists x,
+m = n + x.
+Proof.
+    intros n.
+    induction n as [| n' IH].
+    - intros m _.
+    exists m.
+    simpl.
+    reflexivity.
+    - intros m H.
+    destruct m as [| m'].
+    + simpl in H.
+    discriminate.
+    + simpl in H.
+    apply IH in H.
+    destruct H as [x Hx].
+    exists x.
+    simpl.
+    rewrite Hx.
+    reflexivity.
+Qed.
+
+Theorem plus_exists_leb : forall n m, (exists x, m = n + x) ->
+n <=? m = true.
+Proof.
+    intros n.
+    induction n as [| n' IH].
+    intros m _.
+    simpl. reflexivity.
+    intros m [x Hx].
+    destruct m as [| m'].
+    + simpl in Hx.
+    discriminate.
+    + simpl. apply IH.
+    exists x.
+    simpl in Hx.
+    injection Hx as Hx'.
+    apply Hx'.
+Qed.
+
+Fixpoint In {A : Type} (x : A) (l : list A) : Prop :=
+    match l with
+    | [] => False
+    | x' :: l' => x' = x \/ In x l'
+    end.
+
+Example In_example_1 : In 4 [1;2;3;4;5].
+Proof.
+    simpl. right. right. right. left. reflexivity.
+Qed.
+
+Example In_example_2 :
+forall n, In n [2; 4] -> exists n', n = 2 * n'.
+Proof.
+    simpl.
+    intros n [H | [H | []]].
+    - exists 1. rewrite <- H. reflexivity.
+    - exists 2. rewrite <- H. reflexivity.
+Qed.
+
+Theorem In_map :
+forall (A B : Type) (f : A -> B) (l : list A) (x : A),
+In x l -> In (f x) (map f l).
+Proof.
+    intros A B f l x.
+    induction l as [| x' l' IHl'].
+    simpl. intros [].
+    simpl. intros [H | H].
+    + rewrite H. left. reflexivity.
+    + right. apply IHl'. apply H.
+Qed.
+
+Theorem In_map_iff :
+forall (A B : Type) (f : A -> B) (l : list A) (y : B),
+In y (map f l) <-> exists x, f x = y /\ In x l.
+Proof.
+    intros A B f l y. split.
+    - induction l as [| x l' IHl'].
+    simpl. intros [].
+    simpl. intros [H | H].
+    + exists x. split. apply H.
+    left. reflexivity.
+    + destruct (IHl' H) as [x' [Hx' Hin']].
+    exists x'. split.
+    apply Hx'.
+    right. apply Hin'.
+    - intros [x [Hfx Hin]].
+    induction l as [| a l' IHl'].
+    + simpl in Hin. simpl. apply Hin.
+    + simpl in Hin. simpl.
+    destruct Hin as [Hin1 | Hin2].
+    left. rewrite <- Hfx. rewrite -> Hin1. reflexivity.
+    right. apply IHl'. apply Hin2.
+Qed.
 
 
 
 
 
-
+    
