@@ -553,8 +553,97 @@ Proof.
     right. apply IHl'. apply Hin2.
 Qed.
 
+Theorem In_app_iff : forall A l l' (a:A),
+    In a (l++l') <-> In a l \/ In a l'.
+Proof.
+    intros A l. induction l as [| a' l IH].
+    - intros l' a. simpl. split.
+    + intros H. right. apply H.
+    + intros H. destruct H as [H | H].
+    * exfalso. apply H.
+    * apply H.
+    - intros l1' a. simpl. split.
+    + intros H. destruct H as [H | H].
+    left. left. apply H.
+    destruct (IH l a) as [IH3 IH4].
+    apply or_assoc.
+    right. apply IH.
+    apply H.
+    + intros H. destruct H as [H | H].
+    destruct H as [H1 | H1].
+    left. apply H1. right. apply IH. left.
+    apply H1. right. apply IH. right. apply H.
+Qed.
 
+Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
+    match l with
+    | [] => True
+    | x' :: l' => (P x') /\ (All P l')
+    end.
 
+(*See a false hypothesis, do exfalso*)
+Theorem All_In :
+    forall T (P : T -> Prop) (l : list T),
+    (forall x, In x l -> P x) <->
+    All P l.
+Proof.
+    intros T P l. induction l as [| a l' IHl'].
+    split. simpl. intros x. apply I.
+    simpl. intros x. intros x0. intros H. exfalso. apply H.
+    split. simpl. intros H. destruct IHl'.
+    split. apply H. left. reflexivity.
+    apply H0. intros x. intros H5.
+    apply H. right. apply H5.
+    simpl. intros H x HIn.
+    destruct H as [Ha Hall].
+    destruct HIn as [Hx | HIn'].
+    * rewrite <- Hx. apply Ha.
+    * apply IHl'.
+    apply Hall. apply HIn'.
+Qed.
 
+Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
+    fun x => (odd x = true -> Podd x) /\ (odd x = false -> Peven x).
 
-    
+Theorem combine_odd_even_intro :
+    forall (Podd Peven : nat -> Prop) (n : nat),
+    (odd n = true -> Podd n) ->
+    (odd n = false -> Peven n) ->
+    combine_odd_even Podd Peven n.
+Proof.
+    intros Po Pe n.
+    intros H1 H2.
+    unfold combine_odd_even.
+    split. apply H1. apply H2.
+Qed.
+
+Theorem combine_odd_even_elim_odd :
+    forall (Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    odd n = true -> Podd n.
+Proof.
+    intros Po Pe n.
+    intros H1 H2.
+    unfold combine_odd_even in H1.
+    destruct H1.
+    apply H. apply H2.
+Qed.
+
+Theorem combine_odd_even_elim_even :
+    forall (Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    odd n = false ->
+    Peven n.
+Proof.
+    intros Po Pe n.
+    intros H1 H2.
+    destruct H1.
+    apply H0.
+    apply H2.
+Qed.
+
+Check plus : nat -> nat -> nat.
+Check @rev : forall X, list X -> list X.
+
+Check add_comm : forall n m : nat, n + m = m + n.
+Check plus_id_example : forall n m : nat, n = m -> n + n = m + m.
