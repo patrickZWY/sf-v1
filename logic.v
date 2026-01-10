@@ -869,7 +869,75 @@ Proof.
     apply H0.
     destruct H. apply H.
 Qed.
+
+Example function_equality_ex1 :
+    (fun x => 3 + x) = (fun x => (pred 4) + x).
+Proof. reflexivity. Qed.
+
+Example function_equality_ex2 :
+    (fun x => plus x 1) = (fun x => plus 1 x).
+Proof.
+    Fail reflexivity. Fail rewrite add_comm.
+Abort.
+
+Axiom functional_extensionality : forall {X Y : Type} {f g : X -> Y},
+(forall (x:X), f x = g x) -> f = g.
+
+Example function_equality_ex2 :
+    (fun x => plus x 1) = (fun x => plus 1 x).
+Proof.
+    apply functional_extensionality. intros x.
+    apply add_comm.
+Qed.
+
+Print Assumptions function_equality_ex2.
+
+Fixpoint rev_append {X} (l1 l2 : list X) : list X :=
+    match l1 with
+    | [] => l2
+    | x :: l1' => rev_append l1' (x :: l2)
+    end.
+
+Definition tr_rev {X} (l : list X) : list X :=
+    rev_append l [].
+
+Lemma helper1 : forall {X : Type} (l1 : list X), l1 = [] -> tr_rev l1 = rev l1.
+Proof.
+    intros X l1 H.
+    rewrite H. simpl. unfold tr_rev. simpl. reflexivity.
+Qed.
+
+Lemma helper2 : forall {X : Type} (l1 : list X) (x : X) , l1 = [x] -> tr_rev l1 = rev l1.
+Proof.
+    intros X l1 x H.
+    rewrite H.
+    simpl.
+    reflexivity.
+Qed.
+
+Lemma helper4 : forall {X : Type} (xs acc: list X), rev_append xs acc = rev xs ++ acc.
+Proof.
+    intros X xs.
+    induction xs as [| a xs IH].
+    intro acc. simpl. reflexivity.
+    intro acc. simpl. rewrite IH.
+    rewrite <- app_assoc. reflexivity.
+Qed.
+
+Lemma helper3 : forall {X : Type} (l1 : list X), tr_rev l1 = rev l1.
+Proof.
+    intros X l1.
+    induction l1 as [| x xs IH].
+    apply helper1. reflexivity.
+    simpl.
+    unfold tr_rev. simpl. apply helper4.
+Qed.
+
+Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
+Proof.
+    intro X.
+    apply functional_extensionality.
+    apply helper3.
+Qed.
     
-
-
 
