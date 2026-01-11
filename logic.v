@@ -939,5 +939,110 @@ Proof.
     apply functional_extensionality.
     apply helper3.
 Qed.
+
+Definition excluded_middle := forall P : Prop,
+P \/ ~P.
+
+Theorem restricted_excluded_middle : forall P b,
+(P <-> b = true) -> P \/ ~P.
+Proof.
+    intros P [] H.
+    - left. rewrite H. reflexivity.
+    - right. unfold not. rewrite H. intros contra. discriminate contra.
+Qed.
+
+Theorem restricted_excluded_middle_eq : forall (n m : nat),
+    n = m \/ n <> m.
+Proof.
+    intros n m.
+    apply (restricted_excluded_middle (n = m) (n =? m)).
+    symmetry.
+    apply eqb_eq.
+Qed.
+
+Theorem excluded_middle_irrefutable : forall (P : Prop),
+~~(P \/ ~P).
+Proof.
+    intros P H.
+    apply de_morgan_not_or in H.
+    destruct H.
+    unfold not in H.
+    unfold not in H0.
+    apply H0.
+    apply H.
+Qed.
+
+Theorem not_exists_dist :
+excluded_middle -> forall (X:Type) (P : X -> Prop),
+~ (exists x, ~ P x) -> (forall x, P x).
+Proof.
+    unfold excluded_middle.
+    intros H.
+    intros X p.
+    intro H2.
+    unfold not in H2.
+    intro x.
+    destruct (H (p x)) as [H' | H''].
+    apply H'.
+    exfalso.
+    apply H2.
+    exists x.
+    apply H''.
+Qed.
+
+Definition peirce := forall P Q : Prop,
+((P -> Q) -> P) -> P.
     
+Definition double_negation_elimination := forall P:Prop,
+    ~~P -> P.
+Definition de_morgan_not_and_not := forall P Q:Prop,
+    ~(~P /\ ~Q) -> P \/ Q.
+Definition implies_to_or := forall P Q:Prop,
+    (P -> Q) -> (~P \/ Q).
+Definition consequentia_mirabilis := forall P:Prop,
+    (~P -> P) -> P.
+
+Theorem classic_equivalent :
+forall P Q: Prop, peirce -> double_negation_elimination -> excluded_middle
+-> implies_to_or -> consequentia_mirabilis -> de_morgan_not_and_not.
+Proof.
+    intros P Q Hp Hdne Hem Hit Hcm.
+    unfold de_morgan_not_and_not.
+    intros a b.
+    unfold peirce in Hp. unfold double_negation_elimination in Hdne.
+    unfold excluded_middle in Hem. unfold implies_to_or in Hit.
+    unfold consequentia_mirabilis in Hcm.
+    intro H.
+    destruct (Hem a) as [Ha |Hna].
+    left. apply Ha.
+    right.
+    apply Hdne.
+    intro Bd.
+    apply H.
+    split.
+    apply Hna.
+    apply Bd.
+Qed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
