@@ -258,6 +258,114 @@ Proof.
     apply B.
 Qed.
 
+(*Use inversion to push contradiction forward*)
+Theorem ev5_nonsense :
+    ev 5 -> 2 + 2 = 9.
+Proof.
+    intros H.
+    inversion H.
+    inversion H1.
+    inversion H3.
+Qed.
+
+Theorem inversion_ex1 : forall (n m o : nat),
+[n;m] = [o;o] -> [n] = [m].
+Proof.
+intros n m o H. inversion H. reflexivity. Qed.
+
+Theorem inversion_ex2 : forall (n : nat),
+S n = O -> 2 + 2 = 5.
+Proof.
+    intros n contra. inversion contra.
+Qed.
+
+Lemma ev_Even : forall n,
+ev n -> Even n.
+Proof.
+    unfold Even. intros n E.
+    induction E as [| n' E' IH].
+    - exists 0. reflexivity.
+    - destruct IH as [k Hk]. rewrite Hk.
+    exists (S k). simpl. reflexivity.
+Qed.
+
+Theorem ev_Even_iff : forall n,
+ev n <-> Even n.
+Proof.
+    intros n. split.
+    - apply ev_Even.
+    - unfold Even. intros [k Hk]. rewrite Hk. apply ev_double.
+Qed.
+
+Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
+Proof.
+    intros n m. intros H1 H2.
+    induction H1 as [| k E IH].
+    simpl. apply H2.
+    simpl. inversion IH.
+    apply ev_SS. rewrite <- H0 in IH.
+    apply IH.
+    rewrite <- H in IH.
+    apply ev_SS. apply ev_SS. apply H0.
+Qed.
+
+(*I am prob running in circles, need a cleaner proof.*)
+Theorem ev_ev__ev : forall n m, 
+    ev (n+m) -> ev n -> ev m.
+Proof.
+    intros n m H1 H2.
+    induction H2 as [| k E IH].
+    simpl in H1. apply H1.
+    simpl in H1.
+    apply IH.
+    apply ev_sum.
+    apply E.
+    inversion H1. apply IH. apply H0.
+Qed.
+
+Theorem ev_nn : forall n,
+ev (n + n).
+Proof.
+    intros n.
+    induction n as [| n' IH].
+    simpl. apply ev_0.
+    simpl. rewrite <- plus_n_Sm.
+    apply ev_SS. apply IH.
+Qed.
+
+(*Need review, this too me too long*)
+Theorem ev_plus_plus : forall n m p,
+    ev (n+m) -> ev (n+p) -> ev (m+p).
+Proof.
+    intros n m p H1 H2.
+    assert (Hs : ev ((n + m) + (n + p))).
+    apply ev_sum. apply H1. apply H2.
+    rewrite <- add_shuffle3 in Hs.
+    rewrite <- add_assoc in Hs.
+    rewrite (add_assoc n n (m + p)) in Hs.
+    apply (ev_ev__ev (n + n) (m + p)).
+    apply Hs. apply ev_nn.
+Qed.
+
+
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
