@@ -445,7 +445,101 @@ Proof.
     apply H.
 Qed.
     
+Module Playground.
+
+Inductive le : nat -> nat -> Prop :=
+    | le_n (n : nat) : le n n
+    | le_S (n m : nat) (H : le n m) : le n (S m).
+
+Notation "n <= m" := (le n m).
+
+(* when we apply a constructor in the hypothesis
+we go from left to right in the hypothesis.
+when we apply a constructor to our current goal,
+we go from right to left to reduce it.*)
+Theorem test_le1 :
+    3 <= 3.
+Proof.
+apply le_n. Qed.
+
+Theorem test_le2 :
+    3 <= 6.
+Proof.
+    apply le_S. apply le_S. apply le_S. apply le_n.
+Qed.
+
+(* use inversion to gradually reduce*)
+Theorem test_le3:
+    (2 <= 1) -> 2 + 2 = 5.
+Proof.
+intros H. inversion H. inversion H2. Qed.
+
+Definition lt (n m : nat) := le (S n) m.
+
+Notation "n < m" := (lt n m).
+
+Definition ge (m n : nat) : Prop := le n m.
+Notation "m >= n" := (ge m n).
+
+End Playground.
+
+Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
+Proof.
+    intros m n o H1 H2.
+    induction H2. apply H1. apply le_S.
+    apply IHle. apply H1.
+Qed.
+
+Theorem O_le_n : forall n,
+    0 <= n.
+Proof.
+    intros n.
+    apply le_trans with (n := n).
+    induction n.
+    apply le_n. apply le_S. apply IHn.
+    apply le_n.
+Qed.
+
+Theorem n_le_m__Sn_le_Sm : forall n m,
+    n <= m -> S n <= S m.
+Proof.
+    intros n m H1.
+    induction H1.
+    apply le_n.
+    apply le_S in IHle.
+    apply IHle.
+Qed.
     
+Theorem le_plus_1 : forall a b,
+    a <= a + b.
+Proof.
+    intros a b.
+    induction a.
+    simpl. apply O_le_n.
+    simpl.
+    apply n_le_m__Sn_le_Sm.
+    apply IHa.
+Qed.
+
+
+
+    
+
+
+
+    
+
+
+
+
+
+    
+
+
+
+    
+
+
 
 
     
