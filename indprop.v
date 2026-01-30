@@ -347,8 +347,112 @@ Proof.
     apply Hs. apply ev_nn.
 Qed.
 
+Definition isDiagonal {X : Type} (R: X -> X -> Prop) :=
+    forall x y, R x y -> x = y.
+
+Lemma closure_of_diagonal_is_diagonal: forall X (R : X -> X -> Prop),
+isDiagonal R -> isDiagonal (clos_refl_trans R).
+Proof.
+    intros X R IsDiag x y H.
+    induction H as [x y H | x | x y z H IH H' IH'].
+    - specialize (IsDiag x y H). rewrite -> IsDiag. reflexivity.
+    - reflexivity.
+    - rewrite -> IH, <- IH'. reflexivity.
+Qed.
+
+Inductive ev' : nat -> Prop :=
+    | ev'_0 : ev' 0
+    | ev'_2 : ev' 2
+    | ev'_sum n m (Hn : ev' n) (Hm : ev' m) : ev' (n + m).
+
+Theorem ev'_ev : forall n, ev' n <-> ev n.
+Proof.
+    intros n. split. intros H. induction H.
+    apply ev_0. apply ev_SS. apply ev_0.
+    apply ev_sum. apply IHev'1. apply IHev'2.
+    intros H. induction H. apply ev'_0.
+    replace (S (S n)) with (2 + n).
+    apply (ev'_sum 2 n ev'_2 IHev).
+    simpl. reflexivity.
+Qed.
+
+Module Perm3Reminder.
+Inductive Perm3 {X : Type} : list X -> list X -> Prop :=
+    | perm3_swap12 (a b c : X) :
+        Perm3 [a;b;c] [b;a;c]
+    | perm3_swap23 (a b c : X) :
+        Perm3 [a;b;c] [a;c;b]
+    | perm3_trans (l1 l2 l3 : list X) :
+        Perm3 l1 l2 -> Perm3 l2 l3 -> Perm3 l1 l3.
+End Perm3Reminder.
+Lemma Perm3_symm : forall (X : Type) (l1 l2 : list X),
+    Perm3 l1 l2 -> Perm3 l2 l1.
+Proof.
+    intros X l1 l2 E.
+    (*symmetry has to hold for E12 and E23*)
+    induction E as [a b c | a b c | l1 l2 l3 E12 IH12 E23 IH23].
+    - apply perm3_swap12.
+    - apply perm3_swap23.
+    - apply (perm3_trans _ l2 _).
+    * apply IH23.
+    * apply IH12.
+Qed.
+
+Lemma Perm3_In : forall (X : Type) (x : X) (l1 l2 : list X),
+    Perm3 l1 l2 -> In x l1 -> In x l2.
+Proof.
+    intros X x l1 l2 H1 H2.
+    induction H1.
+    simpl in H2. simpl.
+    destruct H2 as [|[| Fake]].
+    right. left. apply H.
+    left. apply H.
+    right. right. apply Fake.
+    simpl in H2.
+    simpl.
+    destruct H2 as [| [| [| Fake]]].
+    left. apply H.
+    right. right. left. apply H.
+    right. left. apply H.
+    right. right. right. apply Fake.
+    apply IHPerm3_2. apply IHPerm3_1.
+    apply H2.
+Qed.
+
+Lemma Perm3_NotIn : forall (X : Type) (x : X) (l1 l2 : list X),
+    Perm3 l1 l2 -> ~In x l1 -> ~In x l2.
+Proof.
+    intros X x l1 l2 H1 H2.
+    unfold not in *.
+    intro H3.
+    apply H2.
+    apply (Perm3_In X x l2 l1).
+    apply Perm3_symm.
+    apply H1.
+    apply H3.
+Qed.
+
+(*not sure how this works, need to study this further*)
+Example Perm3_example2 : ~Perm3 [1;2;3] [1;2;4].
+Proof.
+    unfold not. intro H.
+    assert (In 3 [1;2;3]) as H2.
+    simpl. right. right. left. reflexivity.
+    apply Perm3_In with (l2:=[1;2;4]) in H2.
+    simpl in H2.
+    destruct H2 as [| [| [| ]]].
+    discriminate H0. discriminate H0. discriminate H0. apply H0.
+    apply H.
+Qed.
+    
+    
+
 
     
+    
+    
+
+
 
     
 
